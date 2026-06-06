@@ -4,6 +4,10 @@ Webhook-to-Telegram bridge on Cloudflare Workers. Create per-event webhook URLs 
 
 Backed by D1. Admin panel is protected by Cloudflare Access.
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/itsamirhn/herald)
+
+Clicking the button clones this repo into your own GitHub account and deploys it to your Cloudflare Workers. You will still need to follow the [setup](#setup) steps below to create the D1 database, set Telegram secrets, and configure Cloudflare Access.
+
 ## Setup
 
 ```bash
