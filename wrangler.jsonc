@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "herald",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "herald",
+      "database_name": "herald",
+      "database_id": "469a162f-5d16-4b86-878d-abb60191b2d0",
+      "migrations_dir": "migrations"
+    }
+  ]
+  // Secrets (set via `wrangler secret put`):
+  //   TG_TOKEN            BotFather token for your Telegram bot
+  //   TG_WEBHOOK_SECRET   random string used in /tg/webhook/:secret path
+}
