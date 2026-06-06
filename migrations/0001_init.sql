@@ -2,14 +2,14 @@ CREATE TABLE hooks (
   uuid           TEXT PRIMARY KEY,
   name           TEXT,
   targets        TEXT NOT NULL,
-  expires_at     INTEGER,
+  expires_on     TEXT,
   created_at     INTEGER NOT NULL,
   updated_at     INTEGER NOT NULL,
   call_count     INTEGER NOT NULL DEFAULT 0,
   last_called_at INTEGER
 );
 
-CREATE INDEX idx_hooks_expires ON hooks(expires_at);
+CREATE INDEX idx_hooks_expires ON hooks(expires_on);
 
 CREATE TABLE aliases (
   alias         TEXT PRIMARY KEY,

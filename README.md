@@ -37,7 +37,7 @@ Open `https://<worker>.workers.dev/admin` to manage hooks, or hit the JSON API:
 # Create
 curl -X POST https://<worker>.workers.dev/admin/hooks \
   -H "content-type: application/json" \
-  -d '{"name":"deploy-alert","targets":["me"],"expires_in_seconds":86400}'
+  -d '{"name":"deploy-alert","targets":["me"],"expires_on":"2027-01-01"}'
 
 # Trigger
 curl -X POST https://<worker>.workers.dev/h/<uuid> \

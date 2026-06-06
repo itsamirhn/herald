@@ -18,21 +18,21 @@ export async function listHooks(db: D1Database): Promise<Hook[]> {
 
 export async function insertHook(
   db: D1Database,
-  hook: { uuid: string; name: string | null; targets: string[]; expires_at: number | null },
+  hook: { uuid: string; name: string | null; targets: string[]; expires_on: string | null },
 ): Promise<Hook> {
   const now = Math.floor(Date.now() / 1000);
   await db
     .prepare(
-      `INSERT INTO hooks (uuid, name, targets, expires_at, created_at, updated_at)
+      `INSERT INTO hooks (uuid, name, targets, expires_on, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
     )
-    .bind(hook.uuid, hook.name, JSON.stringify(hook.targets), hook.expires_at, now, now)
+    .bind(hook.uuid, hook.name, JSON.stringify(hook.targets), hook.expires_on, now, now)
     .run();
   return {
     uuid: hook.uuid,
     name: hook.name,
     targets: hook.targets,
-    expires_at: hook.expires_at,
+    expires_on: hook.expires_on,
     created_at: now,
     updated_at: now,
     call_count: 0,
@@ -43,22 +43,22 @@ export async function insertHook(
 export async function updateHook(
   db: D1Database,
   uuid: string,
-  patch: { name?: string | null; targets?: string[]; expires_at?: number | null },
+  patch: { name?: string | null; targets?: string[]; expires_on?: string | null },
 ): Promise<Hook | null> {
   const existing = await getHook(db, uuid);
   if (!existing) return null;
   const next = {
     name: patch.name === undefined ? existing.name : patch.name,
     targets: patch.targets ?? existing.targets,
-    expires_at: patch.expires_at === undefined ? existing.expires_at : patch.expires_at,
+    expires_on: patch.expires_on === undefined ? existing.expires_on : patch.expires_on,
   };
   const now = Math.floor(Date.now() / 1000);
   await db
     .prepare(
-      `UPDATE hooks SET name = ?, targets = ?, expires_at = ?, updated_at = ?
+      `UPDATE hooks SET name = ?, targets = ?, expires_on = ?, updated_at = ?
        WHERE uuid = ?`,
     )
-    .bind(next.name, JSON.stringify(next.targets), next.expires_at, now, uuid)
+    .bind(next.name, JSON.stringify(next.targets), next.expires_on, now, uuid)
     .run();
   return { ...existing, ...next, updated_at: now };
 }

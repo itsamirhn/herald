@@ -11,13 +11,27 @@ import type { Env, Hook } from "../types.ts";
 interface CreateBody {
   name?: string;
   targets: string[];
-  expires_in_seconds?: number | null;
+  expires_on?: string | null;
 }
 
 interface PatchBody {
   name?: string | null;
   targets?: string[];
-  expires_in_seconds?: number | null;
+  expires_on?: string | null;
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function validateExpiresOn(value: unknown): { ok: true; value: string | null } | { ok: false; error: string } {
+  if (value === null || value === undefined || value === "") return { ok: true, value: null };
+  if (typeof value !== "string" || !ISO_DATE.test(value)) {
+    return { ok: false, error: "expires_on must be an ISO date (YYYY-MM-DD) or null" };
+  }
+  const parsed = new Date(value + "T00:00:00Z");
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+    return { ok: false, error: "expires_on is not a valid calendar date" };
+  }
+  return { ok: true, value };
 }
 
 export function requireAccess(req: Request): Response | null {
@@ -45,15 +59,13 @@ export async function handleAdminHooks(req: Request, env: Env, url: URL): Promis
       if (!body || !Array.isArray(body.targets) || body.targets.length === 0) {
         return json({ error: "`targets` (non-empty string[]) required" }, 400);
       }
-      const expires_at =
-        body.expires_in_seconds && body.expires_in_seconds > 0
-          ? Math.floor(Date.now() / 1000) + body.expires_in_seconds
-          : null;
+      const exp = validateExpiresOn(body.expires_on);
+      if (!exp.ok) return json({ error: exp.error }, 400);
       const hook = await insertHook(env.herald, {
         uuid: crypto.randomUUID(),
         name: body.name ?? null,
         targets: body.targets,
-        expires_at,
+        expires_on: exp.value,
       });
       return json({ hook: withUrl(hook, url) }, 201);
     }
@@ -68,7 +80,7 @@ export async function handleAdminHooks(req: Request, env: Env, url: URL): Promis
   if (req.method === "PATCH") {
     const body = (await safeJson(req)) as PatchBody | null;
     if (!body) return json({ error: "invalid body" }, 400);
-    const patch: { name?: string | null; targets?: string[]; expires_at?: number | null } = {};
+    const patch: { name?: string | null; targets?: string[]; expires_on?: string | null } = {};
     if ("name" in body) patch.name = body.name ?? null;
     if (body.targets !== undefined) {
       if (!Array.isArray(body.targets) || body.targets.length === 0) {
@@ -76,11 +88,10 @@ export async function handleAdminHooks(req: Request, env: Env, url: URL): Promis
       }
       patch.targets = body.targets;
     }
-    if ("expires_in_seconds" in body) {
-      patch.expires_at =
-        body.expires_in_seconds && body.expires_in_seconds > 0
-          ? Math.floor(Date.now() / 1000) + body.expires_in_seconds
-          : null;
+    if ("expires_on" in body) {
+      const exp = validateExpiresOn(body.expires_on);
+      if (!exp.ok) return json({ error: exp.error }, 400);
+      patch.expires_on = exp.value;
     }
     const updated = await updateHook(env.herald, uuid, patch);
     if (!updated) return json({ error: "not found" }, 404);

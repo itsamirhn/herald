@@ -59,10 +59,10 @@ const HTML = `<!doctype html>
       <input id="c-name" type="text" placeholder="(optional) deploy-alert" />
       <label>Targets</label>
       <div id="c-targets" class="targets"><span class="empty">register an alias first</span></div>
-      <label for="c-expires">Expires in</label>
+      <label for="c-expires">Expires on</label>
       <div style="display:flex;gap:8px;align-items:center">
-        <input id="c-expires" type="number" min="0" placeholder="0 = never" style="width:160px" />
-        <span style="color:var(--muted)">seconds</span>
+        <input id="c-expires" type="date" style="width:180px" />
+        <span style="color:var(--muted)">leave empty for never</span>
         <button type="submit" class="primary" style="margin-left:auto">Create</button>
       </div>
     </form>
@@ -86,10 +86,11 @@ const HTML = `<!doctype html>
     <input id="e-name" type="text" />
     <label>Targets</label>
     <div id="e-targets" class="targets"></div>
-    <label for="e-expires">Expires in</label>
+    <label for="e-expires">Expires on</label>
     <div style="display:flex;gap:8px;align-items:center">
-      <input id="e-expires" type="number" min="0" placeholder="leave empty to keep" style="width:160px" />
-      <span style="color:var(--muted)">seconds (empty = unchanged)</span>
+      <input id="e-expires" type="date" style="width:180px" />
+      <button type="button" id="e-clear-expires" style="font-size:12px">Clear</button>
+      <span style="color:var(--muted)">empty = never</span>
     </div>
     <div></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -109,10 +110,10 @@ const toast = (msg) => {
   setTimeout(() => t.classList.remove('show'), 1800);
 };
 const fmtTs = (s) => s ? new Date(s * 1000).toLocaleString() : '-';
-const fmtExpires = (s) => {
-  if (!s) return 'never';
-  const d = s * 1000 - Date.now();
-  return new Date(s * 1000).toLocaleString() + (d < 0 ? ' (expired)' : '');
+const fmtExpires = (d) => {
+  if (!d) return 'never';
+  const today = new Date().toISOString().slice(0, 10);
+  return d + (d < today ? ' (expired)' : '');
 };
 
 async function api(path, opts = {}) {
@@ -170,7 +171,7 @@ function renderHooks() {
       '<td>' + (h.name || '<span style="color:var(--muted)">-</span>') + '</td>' +
       '<td class="mono url-cell"><a href="#" data-copy="' + h.url + '">' + h.url + '</a></td>' +
       '<td>' + targetPills + '</td>' +
-      '<td>' + fmtExpires(h.expires_at) + '</td>' +
+      '<td>' + fmtExpires(h.expires_on) + '</td>' +
       '<td>' + h.call_count + (h.last_called_at ? '<br><span style="color:var(--muted);font-size:11px">' + fmtTs(h.last_called_at) + '</span>' : '') + '</td>' +
       '<td class="row-actions"><button data-edit="' + h.uuid + '">Edit</button><button class="danger" data-del="' + h.uuid + '">Delete</button></td>';
     tbody.appendChild(tr);
@@ -204,20 +205,23 @@ document.addEventListener('click', async (e) => {
     if (!h) return;
     $('#e-uuid').value = h.uuid;
     $('#e-name').value = h.name || '';
-    $('#e-expires').value = '';
+    $('#e-expires').value = h.expires_on || '';
+    $('#e-expires').dataset.original = h.expires_on || '';
     renderTargetPicker($('#e-targets'), h.targets);
     $('#edit-dialog').showModal();
   }
 });
 
 $('#e-cancel').addEventListener('click', () => $('#edit-dialog').close());
+$('#e-clear-expires').addEventListener('click', () => { $('#e-expires').value = ''; });
 $('#e-save').addEventListener('click', async () => {
   const uuid = $('#e-uuid').value;
   const targets = pickedTargets($('#e-targets'));
   if (targets.length === 0) { toast('Pick at least one target'); return; }
   const body = { name: $('#e-name').value || null, targets };
   const exp = $('#e-expires').value;
-  if (exp !== '') body.expires_in_seconds = Number(exp) || 0;
+  const original = $('#e-expires').dataset.original || '';
+  if (exp !== original) body.expires_on = exp || null;
   try { await api('/admin/hooks/' + uuid, { method: 'PATCH', body: JSON.stringify(body) });
         $('#edit-dialog').close(); toast('Saved'); refresh(); }
   catch (err) { toast(err.message); }
@@ -228,8 +232,8 @@ $('#create-form').addEventListener('submit', async (e) => {
   const targets = pickedTargets($('#c-targets'));
   if (targets.length === 0) { toast('Pick at least one target'); return; }
   const body = { name: $('#c-name').value || undefined, targets };
-  const exp = Number($('#c-expires').value || 0);
-  if (exp > 0) body.expires_in_seconds = exp;
+  const exp = $('#c-expires').value;
+  if (exp) body.expires_on = exp;
   try {
     const { hook } = await api('/admin/hooks', { method: 'POST', body: JSON.stringify(body) });
     $('#c-name').value = ''; $('#c-expires').value = '';

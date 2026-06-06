@@ -8,7 +8,7 @@ export interface HookRow {
   uuid: string;
   name: string | null;
   targets: string;
-  expires_at: number | null;
+  expires_on: string | null;
   created_at: number;
   updated_at: number;
   call_count: number;
@@ -19,7 +19,7 @@ export interface Hook {
   uuid: string;
   name: string | null;
   targets: string[];
-  expires_at: number | null;
+  expires_on: string | null;
   created_at: number;
   updated_at: number;
   call_count: number;

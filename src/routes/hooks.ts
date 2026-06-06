@@ -12,8 +12,9 @@ export async function handleHookPost(
   const hook = await getHook(env.herald, uuid);
   if (!hook) return json({ error: "not found" }, 404);
 
-  if (hook.expires_at !== null && hook.expires_at <= Math.floor(Date.now() / 1000)) {
-    return json({ error: "gone", expired_at: hook.expires_at }, 410);
+  const today = new Date().toISOString().slice(0, 10);
+  if (hook.expires_on !== null && hook.expires_on < today) {
+    return json({ error: "gone", expired_on: hook.expires_on }, 410);
   }
 
   let body: HookPostBody;
