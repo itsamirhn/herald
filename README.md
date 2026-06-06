@@ -1,8 +1,8 @@
 # herald
 
-Webhook-to-Telegram bridge on Cloudflare Workers. Create per-event webhook URLs (random UUID, optional name, optional expiry, target recipients). A `POST` to one relays the body as a Telegram message to the targeted users.
+Webhook-to-Telegram bridge on Cloudflare Workers. Create per-event webhook URLs (random UUID, optional name, optional expiry, target recipients). A `POST` to one relays the body as a Telegram message to the targeted recipients.
 
-Backed by D1. Admin panel and JSON API are protected by Cloudflare Access.
+Backed by D1. Admin panel is protected by Cloudflare Access.
 
 ## Setup
 
@@ -17,9 +17,9 @@ pnpm exec wrangler secret put TG_WEBHOOK_SECRET     # random string, e.g. `opens
 pnpm exec wrangler deploy
 ```
 
-Then, in the Cloudflare dashboard, Zero Trust > Access > Applications: add a self-hosted app for `https://<worker>.workers.dev/admin*` with a policy that allows your identity.
+Then, in the Cloudflare dashboard, Zero Trust > Access > Applications: add a self-hosted app for `https://<worker>.workers.dev/admin*` with a policy that allows your identity. Without this, the admin panel is unprotected.
 
-Point Telegram at the Worker and register an alias:
+Point Telegram at the Worker:
 
 ```bash
 curl -X POST "https://api.telegram.org/bot$TG_TOKEN/setWebhook" \
@@ -37,15 +37,11 @@ Each alias maps to one (chat, optional topic) pair. Re-registering with the same
 
 ## Usage
 
-Open `https://<worker>.workers.dev/admin` to manage hooks, or hit the JSON API:
+Open `https://<worker>.workers.dev/admin` to create and manage hooks.
+
+To trigger a hook from a script:
 
 ```bash
-# Create
-curl -X POST https://<worker>.workers.dev/admin/hooks \
-  -H "content-type: application/json" \
-  -d '{"name":"deploy-alert","targets":["me"],"expires_on":"2027-01-01"}'
-
-# Trigger
 curl -X POST https://<worker>.workers.dev/h/<uuid> \
   -H "content-type: application/json" \
   -d '{"text":"hello *world*","parse_mode":"Markdown"}'
