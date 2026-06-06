@@ -100,20 +100,28 @@ export async function resolveAliases(
 
 export async function upsertAlias(
   db: D1Database,
-  alias: string,
-  chatId: number,
-  username: string | null,
+  args: {
+    alias: string;
+    chatId: number;
+    username: string | null;
+    chatType: string;
+    threadId: number | null;
+    title: string | null;
+  },
 ): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
   await db
     .prepare(
-      `INSERT INTO aliases (alias, chat_id, username, registered_at)
-       VALUES (?, ?, ?, ?)
+      `INSERT INTO aliases (alias, chat_id, username, registered_at, chat_type, thread_id, title)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(alias) DO UPDATE SET
          chat_id = excluded.chat_id,
          username = excluded.username,
-         registered_at = excluded.registered_at`,
+         registered_at = excluded.registered_at,
+         chat_type = excluded.chat_type,
+         thread_id = excluded.thread_id,
+         title = excluded.title`,
     )
-    .bind(alias, chatId, username, now)
+    .bind(args.alias, args.chatId, args.username, now, args.chatType, args.threadId, args.title)
     .run();
 }

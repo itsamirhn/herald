@@ -1,0 +1,3 @@
+ALTER TABLE aliases ADD COLUMN chat_type TEXT;
+ALTER TABLE aliases ADD COLUMN thread_id INTEGER;
+ALTER TABLE aliases ADD COLUMN title TEXT;

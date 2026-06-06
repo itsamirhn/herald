@@ -38,7 +38,7 @@ export async function handleHookPost(
   }
 
   const settled = await Promise.allSettled(
-    resolved.map((r) => sendMessage(env.TG_TOKEN, r.chat_id, body.text, body.parse_mode)),
+    resolved.map((r) => sendMessage(env.TG_TOKEN, r.chat_id, body.text, body.parse_mode, r.thread_id)),
   );
 
   let sent = 0;

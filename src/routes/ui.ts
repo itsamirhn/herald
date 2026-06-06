@@ -45,9 +45,9 @@ const HTML = `<!doctype html>
 
   <section>
     <h2>Aliases</h2>
-    <div id="aliases-empty" class="empty" hidden>No aliases yet. DM your bot with <code>/start &lt;alias&gt;</code> to register one.</div>
+    <div id="aliases-empty" class="empty" hidden>No aliases yet. DM your bot <code>/start &lt;alias&gt;</code>, or add it to a group/channel and send <code>/register &lt;alias&gt;</code>.</div>
     <table id="aliases-table" hidden>
-      <thead><tr><th>Alias</th><th>Username</th><th>Chat ID</th><th>Registered</th></tr></thead>
+      <thead><tr><th>Alias</th><th>Where</th><th>Chat ID</th><th>Registered</th></tr></thead>
       <tbody></tbody>
     </table>
   </section>
@@ -152,11 +152,26 @@ function renderAliases() {
   for (const a of aliases) {
     const tr = document.createElement('tr');
     tr.innerHTML = '<td class="mono">' + a.alias + '</td>' +
-      '<td>' + (a.username ? '@' + a.username : '-') + '</td>' +
-      '<td class="mono">' + a.chat_id + '</td>' +
+      '<td>' + describeAlias(a) + '</td>' +
+      '<td class="mono">' + a.chat_id + (a.thread_id ? ' / ' + a.thread_id : '') + '</td>' +
       '<td>' + fmtTs(a.registered_at) + '</td>';
     tbody.appendChild(tr);
   }
+}
+
+function describeAlias(a) {
+  const kind = a.chat_type || 'private';
+  const pill = '<span class="pill">' + kind + '</span>';
+  if (kind === 'private') {
+    return pill + (a.username ? ' @' + a.username : '');
+  }
+  const label = a.title ? ' ' + escapeHtml(a.title) : '';
+  const topic = a.thread_id ? ' <span class="pill">topic ' + a.thread_id + '</span>' : '';
+  return pill + label + topic;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
 function renderHooks() {

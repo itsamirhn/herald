@@ -13,9 +13,11 @@ export async function sendMessage(
   chatId: number,
   text: string,
   parseMode?: ParseMode,
+  threadId?: number | null,
 ): Promise<SendResult> {
   const body: Record<string, unknown> = { chat_id: chatId, text };
   if (parseMode) body.parse_mode = parseMode;
+  if (threadId !== undefined && threadId !== null) body.message_thread_id = threadId;
   const res = await fetch(`${API}/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "content-type": "application/json" },

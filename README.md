@@ -27,7 +27,13 @@ curl -X POST "https://api.telegram.org/bot$TG_TOKEN/setWebhook" \
   -d "secret_token=$TG_WEBHOOK_SECRET"
 ```
 
-DM your bot `/start <alias>` (e.g. `/start me`) to register your chat id.
+Register targets by messaging the bot:
+
+- Private chat: DM the bot `/start <alias>` (e.g. `/start me`).
+- Group or supergroup: add the bot to the group, then send `/register <alias>` (use `/register@<botname> <alias>` if multiple bots are present). For a forum group, send it inside the topic you want to target.
+- Channel: add the bot as an admin, then post `/register <alias>` in the channel.
+
+Each alias maps to one (chat, optional topic) pair. Re-registering with the same alias overwrites it.
 
 ## Usage
 
